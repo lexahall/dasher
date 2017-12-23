@@ -1,6 +1,11 @@
 import React from 'react';
+import Apollo from './Apollo';
 
 function App() {
-  return <div>Hello World!</div>
+  return (
+    <Apollo>
+      <div>Hello World!</div>
+    </Apollo>
+  )
 }
 export default App;
