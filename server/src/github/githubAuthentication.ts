@@ -4,10 +4,16 @@ import * as fetch from 'isomorphic-fetch'
 
 interface User {
   id: string
+  name: string | null
+  username: string
+  avatarUrl: string
 }
 
 interface GithubUser {
   id: string
+  name: string | null
+  username: string
+  avatarUrl: string
 }
 
 interface EventData {
@@ -46,7 +52,13 @@ export default async (event: FunctionEvent<EventData>) => {
     let userId: string | null = null
 
     if (!user) {
-      userId = await createGraphcoolUser(api, githubUser.id)
+      userId = await createGraphcoolUser(
+        api, 
+        githubUser.id,
+        githubUser.name,
+        githubUser.login,
+        githubUser.avatarUrl,
+      )
     } else {
       userId = user.id
     }
@@ -102,6 +114,9 @@ async function getGraphcoolUser(api: GraphQLClient, githubUserId: string): Promi
     query getUser($githubUserId: String!) {
       User(githubUserId: $githubUserId) {
         id
+        name
+        username
+        avatarUrl
       }
     }
   `
@@ -114,11 +129,25 @@ async function getGraphcoolUser(api: GraphQLClient, githubUserId: string): Promi
   return api.request<{ User }>(query, variables)
 }
 
-async function createGraphcoolUser(api: GraphQLClient, githubUserId: string): Promise<string> {
+async function createGraphcoolUser(
+  api: GraphQLClient, 
+  githubUserId: string,
+  name: string | null, 
+  username: string,
+  avatarUrl: string,
+ ): Promise<string> {
   const mutation = `
-    mutation createUser($githubUserId: String!) {
+    mutation createUser(
+      $githubUserId: String!
+      $name: String,
+      $username: String!,
+      $avatarUrl: String!
+    ) {
       createUser(
-        githubUserId: $githubUserId
+        githubUserId: $githubUserId,
+        name: $name,
+        username: $username,
+        avatarUrl: $avatarUrl
       ) {
         id
       }
@@ -127,7 +156,11 @@ async function createGraphcoolUser(api: GraphQLClient, githubUserId: string): Pr
 
   const variables = {
     // need to 'cast' to string, otherwise it will be seen as integer by GraphQL (because it's a number string)
-    githubUserId: `${githubUserId}`
+    githubUserId: 
+      `${githubUserId}`,
+      name,
+      username,
+      avatarUrl,
   }
 
   return api.request<{ createUser: User }>(mutation, variables)

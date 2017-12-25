@@ -6,6 +6,9 @@ type User @model {
   createdAt: DateTime!
   updatedAt: DateTime!
   githubUserId: String @isUnique
+  name: String
+  username: String! @isUnique
+  avatarUrl: String!
 
   # Uncomment below - you can declare relations between models like this
 
