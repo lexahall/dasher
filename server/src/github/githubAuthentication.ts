@@ -60,7 +60,13 @@ export default async (event: FunctionEvent<EventData>) => {
         githubUser.avatarUrl,
       )
     } else {
-      userId = user.id
+      userId = await updateGraphCoolUser(
+        api,
+        githubUser.id,
+        githubUser.name,
+        githubUser.login,
+        githubUser.avatarUrl,
+      )
     }
 
     // generate node token for User node
@@ -130,9 +136,9 @@ async function getGraphcoolUser(api: GraphQLClient, githubUserId: string): Promi
 }
 
 async function createGraphcoolUser(
-  api: GraphQLClient, 
+  api: GraphQLClient,
   githubUserId: string,
-  name: string | null, 
+  name: string | null,
   username: string,
   avatarUrl: string,
  ): Promise<string> {
@@ -156,7 +162,7 @@ async function createGraphcoolUser(
 
   const variables = {
     // need to 'cast' to string, otherwise it will be seen as integer by GraphQL (because it's a number string)
-    githubUserId: 
+    githubUserId:
       `${githubUserId}`,
       name,
       username,
@@ -165,4 +171,42 @@ async function createGraphcoolUser(
 
   return api.request<{ createUser: User }>(mutation, variables)
     .then(r => r.createUser.id)
+}
+
+async function updateGraphcoolUser(
+  api: GraphQLClient
+  githubUserId: string,
+  name: string | null,
+  username: string,
+  avatarUrl: string,
+ ): Promise<string> {
+  const mutation = `
+    mutation createUser(
+      $githubUserId: String!
+      $name: String,
+      $username: String!,
+      $avatarUrl: String!
+    ) {
+      createUser(
+        githubUserId: $githubUserId,
+        name: $name,
+        username: $username,
+        avatarUrl: $avatarUrl
+      ) {
+        id
+      }
+    }
+  `
+
+  const variables = {
+    // need to 'cast' to string, otherwise it will be seen as integer by GraphQL (because it's a number string)
+    githubUserId:
+      `${githubUserId}`,
+      name,
+      username,
+      avatarUrl,
+  }
+
+  return api.request<{ updateUser: User }>(mutation, variables)
+    .then(r => r.updateUser.id)
 }
