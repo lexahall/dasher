@@ -1,7 +1,7 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import queryString from 'query-string';
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import gql from 'graphql-tag';
 import { GITHUB_CLIENT_ID, GRAPHCOOL_TOKEN_KEY } from '../constants';
 
@@ -46,14 +46,28 @@ class SignInPage extends React.Component {
       const query = queryString.stringify({
          client_id: GITHUB_CLIENT_ID,
       });
+
+      return query;
    };
 
    render() {
-      if (localStorage.getItem(GRAPHCOOL_TOKEN_KEY)) {
-         return <Redirect to="/" />;
+      const { loggedInUserQuery } = this.props;
+
+      if (loggedInUserQuery.loading) {
+         return <div>Loading</div>;
       }
 
-      return (
+      if (loggedInUserQuery.error) {
+         console.error(loggedInUserQuery.error);
+         return <div>Error</div>;
+      }
+
+      const isLoggedIn = 
+         loggedInUserQuery.loggedInUser && loggedInUserQuery.loggedInUser.id;
+
+      return isLoggedIn ? (
+         <Redirect to="/" />
+      ) : (
          <div>
             <h1>Sign In</h1>
             {this.state.loading && 'Loading'}
@@ -70,9 +84,17 @@ const AUTHENTICATE_USER_MUTATION = gql`
          token
       }
    }
-
 `;
 
-export default graphql(AUTHENTICATE_USER_MUTATION, {
-   name: 'authenticateUserMutation',
-})(SignInPage);
+const LOGGED_IN_USER_QUERY = gql`
+   query LoggedInUserQuery {
+      loggedInUser {
+         id
+      }
+   }
+`;
+
+export default compose(
+   graphql(AUTHENTICATE_USER_MUTATION, { name: 'authenticateUserMutation' }),
+   graphql(LOGGED_IN_USER_QUERY, { name: 'loggedInUserQuery', options: { fetchPolicy: 'network-only' }})
+)(SignInPage);
