@@ -43,11 +43,15 @@ class SignInPage extends React.Component {
    };
 
    getGithubAuthUrl = () => {
+      const { protocol, host, pathname } = window.location;
+      const callbackUrl = protocol + '//' + host + pathname; 
+
       const query = queryString.stringify({
          client_id: GITHUB_CLIENT_ID,
+         redirect_uri: callbackUrl,
       });
 
-      return query;
+      return `https://github.com/login/oauth/authorize?${query}`;
    };
 
    render() {

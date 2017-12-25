@@ -12,7 +12,7 @@ interface User {
 interface GithubUser {
   id: string
   name: string | null
-  username: string
+  login: string
   avatarUrl: string
 }
 
@@ -174,7 +174,7 @@ async function createGraphcoolUser(
 }
 
 async function updateGraphcoolUser(
-  api: GraphQLClient
+  api: GraphQLClient,
   githubUserId: string,
   name: string | null,
   username: string,
